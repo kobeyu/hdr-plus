@@ -1,6 +1,7 @@
 #include "align.h"
 
 #include <string>
+
 #include "Halide.h"
 #include "Point.h"
 #include "util.h"
@@ -9,22 +10,27 @@ using namespace Halide;
 using namespace Halide::ConciseCasts;
 
 /*
- * align_layer -- determines the best offset for tiles of the image at a given resolution provided the offsets for
- * the layer above.
+ * align_layer -- determines the best offset for tiles of the image at a given
+ * resolution provided the offsets for the layer above.
  */
-Func align_layer(Func layer, Func prev_alignment, Point prev_min, Point prev_max) {
-
+Func align_layer(Func layer, Func prev_alignment, Point prev_min,
+                 Point prev_max) {
     Func scores(layer.name() + "_scores");
     Func alignment(layer.name() + "_alignment");
 
     Var xi, yi, tx, ty, n;
-    RDom r0(0, 16, 0, 16);              // reduction over pixels in tile
-    RDom r1(-4, 8, -4, 8);              // reduction over search region; extent clipped to 8 for SIMD vectorization
+    RDom r0(0, 16, 0, 16);  // reduction over pixels in tile
+    RDom r1(-4, 8, -4, 8);  // reduction over search region; extent clipped to 8
+                            // for SIMD vectorization
 
-    // offset from the alignment of the previous layer, scaled to this layer. Clamp to bound the amount of memory Halide
-    // allocates for the current alignment layer.
+    // offset from the alignment of the previous layer, scaled to this layer.
+    // Clamp to bound the amount of memory Halide allocates for the current
+    // alignment layer.
 
-    Point prev_offset = DOWNSAMPLE_RATE * clamp(P(prev_alignment(prev_tile(tx), prev_tile(ty), n)), prev_min, prev_max);
+    Point prev_offset =
+        DOWNSAMPLE_RATE *
+        clamp(P(prev_alignment(prev_tile(tx), prev_tile(ty), n)), prev_min,
+              prev_max);
 
     // indices into layer at a specific tile indices and offsets
 
@@ -34,20 +40,23 @@ Func align_layer(Func layer, Func prev_alignment, Point prev_min, Point prev_max
     Expr x = x0 + prev_offset.x + xi;
     Expr y = y0 + prev_offset.y + yi;
 
-    // values and L1 distance between reference and alternate layers at specific pixel
+    // values and L1 distance between reference and alternate layers at specific
+    // pixel
 
     Expr ref_val = layer(x0, y0, 0);
     Expr alt_val = layer(x, y, n);
 
     Expr dist = abs(i32(ref_val) - i32(alt_val));
 
-    // sum of L1 distances over each pixel in a tile, for the offset specified by xi, yi
+    // sum of L1 distances over each pixel in a tile, for the offset specified
+    // by xi, yi
 
     scores(xi, yi, tx, ty, n) = sum(dist);
 
     // alignment offset for each tile (offset where score is minimum)
 
-    alignment(tx, ty, n) = P(argmin(scores(r1.x, r1.y, tx, ty, n))) + prev_offset;
+    alignment(tx, ty, n) =
+        P(argmin(scores(r1.x, r1.y, tx, ty, n))) + prev_offset;
 
     ///////////////////////////////////////////////////////////////////////////
     // schedule
@@ -61,20 +70,23 @@ Func align_layer(Func layer, Func prev_alignment, Point prev_min, Point prev_max
 }
 
 /*
- * align -- Aligns multiple raw RGGB frames of a scene in T_SIZE x T_SIZE tiles which overlap
- * by T_SIZE_2 in each dimension. align(imgs)(tile_x, tile_y, n) is a point representing the x and y offset
- * for a tile in layer n that most closely matches that tile in the reference (relative to the reference tile's location)
+ * align -- Aligns multiple raw RGGB frames of a scene in T_SIZE x T_SIZE tiles
+ * which overlap by T_SIZE_2 in each dimension. align(imgs)(tile_x, tile_y, n)
+ * is a point representing the x and y offset for a tile in layer n that most
+ * closely matches that tile in the reference (relative to the reference tile's
+ * location)
  */
 Func align(const Halide::Func imgs, Halide::Expr width, Halide::Expr height) {
-
     Func alignment_3("layer_3_alignment");
     Func alignment("alignment");
 
     Var tx, ty, n;
 
     // mirror input with overlapping edges
-
-    Func imgs_mirror = BoundaryConditions::mirror_interior(imgs, 0, width, 0, height);
+    Region region;
+    region.push_back(Range(0, width));
+    region.push_back(Range(0, height));
+    Func imgs_mirror = BoundaryConditions::mirror_interior(imgs, region);
 
     // downsampled layers for alignment
 
@@ -110,12 +122,18 @@ Func align(const Halide::Func imgs, Halide::Expr width, Halide::Expr height) {
     Expr num_tx = width / T_SIZE_2 - 1;
     Expr num_ty = height / T_SIZE_2 - 1;
 
-    // final alignment offsets for the original mosaic image; tiles outside of the bounds use the nearest alignment offset
+    // final alignment offsets for the original mosaic image; tiles outside of
+    // the bounds use the nearest alignment offset
 
     alignment(tx, ty, n) = 2 * P(alignment_0(tx, ty, n));
 
-    Func alignment_repeat = BoundaryConditions::repeat_edge(alignment, 0, num_tx, 0, num_ty);
-    
+    Region region1;
+    region1.push_back(Range(0, num_tx));
+    region1.push_back(Range(0, num_ty));
+    Func alignment_repeat = BoundaryConditions::repeat_edge(alignment, region1);
+
+    // Func output;
+    // return output;
     return alignment_repeat;
 }
 

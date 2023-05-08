@@ -13,6 +13,8 @@
  * HDRPlus Class -- Houses file I/O, defines pipeline attributes and calls
  * processes main stages of the pipeline.
  */
+
+std::string dir_path;
 class HDRPlus {
     const Burst& burst;
 
@@ -49,6 +51,22 @@ class HDRPlus {
                          wb.r, wb.g0, wb.g1, wb.b, cfa_pattern, ccm, c, g,
                          output_img);
 
+        auto fnDump = [&]() {
+            int size =
+                output_img.width() * output_img.height() * sizeof(uint16_t);
+
+            std::ofstream outfile(dir_path + "/finish.bin", std::ios::binary);
+            outfile.write(reinterpret_cast<char*>(output_img.data()), size);
+            outfile.close();
+
+            std::ofstream raw_imgs(dir_path + "/raw_imgs.bin",
+                                   std::ios::binary);
+            raw_imgs.write(reinterpret_cast<char*>(imgs.data()),
+                           imgs.size_in_bytes());
+            raw_imgs.close();
+        };
+
+        fnDump();
         // transpose to account for interleaved layout
         output_img.transpose(0, 1);
         output_img.transpose(1, 2);
@@ -109,7 +127,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string dir_path = argv[i++];
+    dir_path = argv[i++];
     std::string out_name = argv[i++];
 
     std::vector<std::string> in_names;

@@ -25,8 +25,10 @@ Func merge_temporal(Halide::Func imgs, Expr width, Expr height, Expr frames, Fun
     RDom r1(1, frames - 1);                 // reduction over alternate images
 
     // mirror input with overlapping edges
-
-    Func imgs_mirror = BoundaryConditions::mirror_interior(imgs, 0, width, 0, height);
+    Region region;
+    region.push_back(Range(0, width));
+    region.push_back(Range(0, height));
+    Func imgs_mirror = BoundaryConditions::mirror_interior(imgs, region);
 
     // downsampled layer for computing L1 distances
 
@@ -39,7 +41,7 @@ Func merge_temporal(Halide::Func imgs, Expr width, Expr height, Expr frames, Fun
 
     // expressions for summing over pixels in each tile
 
-    offset = clamp(P(alignment(tx, ty, n)), P(MIN_OFFSET, MIN_OFFSET), P(MAX_OFFSET, MAX_OFFSET));
+    offset = clamp(P(MIN_OFFSET, MIN_OFFSET), P(MIN_OFFSET, MIN_OFFSET), P(MAX_OFFSET, MAX_OFFSET));
 
     al_x = idx_layer(tx, r0.x) + offset.x / 2;
     al_y = idx_layer(ty, r0.y) + offset.y / 2;
@@ -69,7 +71,7 @@ Func merge_temporal(Halide::Func imgs, Expr width, Expr height, Expr frames, Fun
 
     // expressions for summing over images at each pixel
 
-    offset = P(alignment(tx, ty, r1));
+    offset = P(MIN_OFFSET, MIN_OFFSET);
 
     al_x = idx_im(tx, ix) + offset.x;
     al_y = idx_im(ty, iy) + offset.y;
@@ -89,7 +91,7 @@ Func merge_temporal(Halide::Func imgs, Expr width, Expr height, Expr frames, Fun
 
     total_weight.compute_root().parallel(ty).vectorize(tx, 16);
 
-    output.compute_root().parallel(ty).vectorize(ix, 32);
+    output.compute_root().parallel(ty).vectorize(ix, 32); //32
 
     return output;
 }
@@ -135,9 +137,9 @@ Func merge_spatial(Func input) {
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    weight.compute_root().vectorize(v, 32);
+    weight.compute_root().vectorize(v, 32); //32
 
-    output.compute_root().parallel(y).vectorize(x, 32);
+    output.compute_root().parallel(y).vectorize(x, 32); //32
 
     return output;
 }

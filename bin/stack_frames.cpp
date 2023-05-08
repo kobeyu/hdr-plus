@@ -21,6 +21,8 @@ Halide::Runtime::Buffer<uint16_t> align_and_merge(
 void dump_params(Burst& burst, const std::string& dir_path) {
     // dump parameters to json file
     Json::Value root;
+    root["img_width"] = burst.ToBuffer().width();
+    root["img_height"] = burst.ToBuffer().height();
     root["black_point"] = burst.GetBlackLevel();
     root["white_point"] = burst.GetWhiteLevel();
     const WhiteBalance wb = burst.GetWhiteBalance();
