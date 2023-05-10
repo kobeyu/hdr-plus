@@ -18,7 +18,17 @@ class StackFrames : public Halide::Generator<StackFrames> {
         Func alignment = align(inputs, inputs.width(), inputs.height());
         Func merged = merge(inputs, inputs.width(), inputs.height(),
                             inputs.dim(2).extent(), alignment);
+                            //inputs.dim(2).extent(), alignment);
         output = merged;
+    }
+
+    void schedule() {
+        if (using_autoscheduler()) {
+            inputs.set_estimates({{0,4048}, {0,3036}, {0,6}});
+            output.set_estimates({{0,4048}, {0,3036}});
+        }
+
+
     }
 };
 

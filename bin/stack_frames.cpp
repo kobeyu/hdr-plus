@@ -92,8 +92,10 @@ int main(int argc, char* argv[]) {
 
     Burst burst(dir_path, in_names);
 
+    std::cerr << "raw size(w/h): " << burst.GetWidth() << ", " << burst.GetHeight() << std::endl;
+
     const auto merged = align_and_merge(burst.ToBuffer());
-    std::cerr << "merged size: " << merged.width() << " " << merged.height()
+    std::cerr << "merged size(w/h): " << merged.width() << ", " << merged.height()
               << std::endl;
 
     dump(burst, merged, dir_path);

@@ -26,7 +26,11 @@ Func box_down2(Func input, std::string name) {
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    output.compute_root().parallel(y).vectorize(x, 16);
+    if(true) {
+        output.set_estimates({{0,4048},{0,3036},{0,6}});
+    } else {
+        output.compute_root().parallel(y).vectorize(x, 16);
+    }
 
     return output;
 }
@@ -81,7 +85,11 @@ Func gauss_down4(Func input, std::string name) {
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    output.compute_root().parallel(y).vectorize(x, 16);
+    if (false) {
+        output.set_estimates({{0,4048},{0,3036},{0,6}});
+    } else {
+        output.compute_root().parallel(y).vectorize(x, 16);
+    }
 
     return output;
 }

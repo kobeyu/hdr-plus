@@ -8,6 +8,7 @@
 using namespace Halide;
 using namespace Halide::ConciseCasts;
 
+
 /*
  * merge_temporal -- combines aligned tiles in the temporal dimension by
  * weighting various frames based on their L1 distance to the reference frame's
@@ -87,12 +88,17 @@ Func merge_temporal(Halide::Func imgs, Expr width, Expr height, Expr frames, Fun
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    weight.compute_root().parallel(ty).vectorize(tx, 16);
+    if (true) {
+        weight.set_estimates({{0, 16}, {0, 16}, {0, 4}});
+        total_weight.set_estimates({{0,16},{0,16}});
+        output.set_estimates({{0,128},{0,128},{0,16},{0,16}});
+    } else {
+        weight.compute_root().parallel(ty).vectorize(tx, 16);
 
-    total_weight.compute_root().parallel(ty).vectorize(tx, 16);
+        total_weight.compute_root().parallel(ty).vectorize(tx, 16);
 
-    output.compute_root().parallel(ty).vectorize(ix, 32); //32
-
+        output.compute_root().parallel(ty).vectorize(ix, 32); //32
+    }
     return output;
 }
 
@@ -137,9 +143,14 @@ Func merge_spatial(Func input) {
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    weight.compute_root().vectorize(v, 32); //32
-
-    output.compute_root().parallel(y).vectorize(x, 32); //32
+    if (true) {
+        input.set_estimates({{0,16},{0,16},{0,16},{0,16}});
+        weight.set_estimates({{0,32}});
+        output.set_estimates({{0, 4048}, {0, 3036}});
+    } else {
+        weight.compute_root().vectorize(v, 32); //32
+        output.compute_root().parallel(y).vectorize(x, 32); //32
+    }
 
     return output;
 }

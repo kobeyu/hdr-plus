@@ -62,9 +62,13 @@ Func align_layer(Func layer, Func prev_alignment, Point prev_min,
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    scores.compute_at(alignment, tx).vectorize(xi, 8);
-
-    alignment.compute_root().parallel(ty).vectorize(tx, 16);
+    if (true) {
+        scores.set_estimates({{0,128},{0,128},{0,16},{0,16},{0,6}});
+        alignment.set_estimates({{0,4048},{0,3036},{0,6}});
+    } else {
+        scores.compute_at(alignment, tx).vectorize(xi, 8);
+        alignment.compute_root().parallel(ty).vectorize(tx, 16);
+    }
 
     return alignment;
 }
@@ -131,6 +135,18 @@ Func align(const Halide::Func imgs, Halide::Expr width, Halide::Expr height) {
     region1.push_back(Range(0, num_tx));
     region1.push_back(Range(0, num_ty));
     Func alignment_repeat = BoundaryConditions::repeat_edge(alignment, region1);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // schedule
+    ///////////////////////////////////////////////////////////////////////////
+
+    if (true) {
+    } else {
+    }
+
+    return alignment;
+
+
 
     // Func output;
     // return output;

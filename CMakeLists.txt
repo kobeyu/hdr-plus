@@ -41,6 +41,23 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${RAW2DNG_INCLUDE_DIRS})
 include_directories(${CMAKE_BINARY_DIR}/genfiles)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}  ${JSONCPP_INCLUDE_DIR})
 
+
+add_executable(align_and_merge_generator src/align_and_merge_generator.cpp src/align.cpp src/merge.cpp src/util.cpp)
+target_link_libraries(align_and_merge_generator PRIVATE Halide::Generator)
+# doc: https://github.com/halide/Halide/blob/main/README_cmake.md#add_halide_library
+add_halide_library(align_and_merge
+    FROM align_and_merge_generator
+    FUNCTION_NAME align_and_merge
+    SCHEDULE | STMT | STMT_HTML | COMPILER_LOG | LLVM_ASSEMBLY
+    AUTOSCHEDULER Halide::Adams2019 #Halide::Adams2019 #mullapudi2016
+    TARGETS host
+    FEATURES avx avx2 f16c fma sse41
+    # HALIDE_TARGET ${HALIDE_TARGET}  # TODO: add option with custom HALIDE_TARGET
+    # HALIDE_TARGET_FEATURES ${HALIDE_TARGET_FEATURES}  # TODO: add option with custom HALIDE_TARGET
+    # EXTRA_OUTPUTS "stmt;html;schedule") # uncomment for extra output
+)
+
+
 add_executable(hdrplus_pipeline_generator src/hdrplus_pipeline_generator.cpp src/align.cpp src/merge.cpp src/finish.cpp src/util.cpp)
 target_link_libraries(hdrplus_pipeline_generator PRIVATE Halide::Generator)
 
@@ -51,17 +68,7 @@ add_halide_library(hdrplus_pipeline
     FUNCTION_NAME hdrplus_pipeline
     # HALIDE_TARGET ${HALIDE_TARGET}  # TODO: add option with custom HALIDE_TARGET
     # HALIDE_TARGET_FEATURES ${HALIDE_TARGET_FEATURES}  # TODO: add option with custom HALIDE_TARGET
-    # EXTRA_OUTPUTS "stmt;html;schedule") # uncomment for extra output
-)
-
-add_executable(align_and_merge_generator src/align_and_merge_generator.cpp src/align.cpp src/merge.cpp src/util.cpp)
-target_link_libraries(align_and_merge_generator PRIVATE Halide::Generator)
-add_halide_library(align_and_merge
-    FROM align_and_merge_generator
-    FUNCTION_NAME align_and_merge
-    # HALIDE_TARGET ${HALIDE_TARGET}  # TODO: add option with custom HALIDE_TARGET
-    # HALIDE_TARGET_FEATURES ${HALIDE_TARGET_FEATURES}  # TODO: add option with custom HALIDE_TARGET
-    # EXTRA_OUTPUTS "stmt;html;schedule") # uncomment for extra output
+    # extra-output stmt;html;schedule # uncomment for extra output
 )
 
 
