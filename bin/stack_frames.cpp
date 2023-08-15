@@ -18,13 +18,19 @@ Halide::Runtime::Buffer<uint16_t> align_and_merge(
     return merged_buffer;
 }
 
-void dump_params(Burst& burst, const std::string& dir_path) {
+void dump_params(Burst& burst, const std::string& dir_path,
+                 const Halide::Runtime::Buffer<uint16_t>& merged_buf) {
     // dump parameters to json file
     Json::Value root;
-    root["img_width"] = burst.ToBuffer().width();
-    root["img_height"] = burst.ToBuffer().height();
+    root["raw_image_width"] = burst.ToBuffer().width();
+    root["raw_image_height"] = burst.ToBuffer().height();
+    root["raw_image_channels"] = burst.ToBuffer().channels();
+    root["merged_image_width"] = merged_buf.width();
+    root["merged_image_height"] = merged_buf.height();
+    root["merged_image_channel"] = merged_buf.channels();
     root["black_point"] = burst.GetBlackLevel();
     root["white_point"] = burst.GetWhiteLevel();
+    root["cfa_pattern"] = static_cast<int>(burst.GetCfaPattern());
     const WhiteBalance wb = burst.GetWhiteBalance();
     Json::Value rggb;
     rggb.append(wb.r);
@@ -45,7 +51,7 @@ void dump_params(Burst& burst, const std::string& dir_path) {
     }
 
     // Open a file stream for writing
-    std::ofstream file(dir_path + "/params.json");
+    std::ofstream file(dir_path + "/stack_frames_params.json");
 
     //  Write the JSON data to the file
     Json::StyledWriter writer;
@@ -66,7 +72,7 @@ void dump_buffer(const Halide::Runtime::Buffer<uint16_t>& merged_buf,
 
 void dump(Burst& burst, const Halide::Runtime::Buffer<uint16_t>& merged_buf,
           const std::string& dir_path) {
-    dump_params(burst, dir_path);
+    dump_params(burst, dir_path, merged_buf);
     dump_buffer(merged_buf, dir_path);
 }
 
@@ -92,11 +98,12 @@ int main(int argc, char* argv[]) {
 
     Burst burst(dir_path, in_names);
 
-    std::cerr << "raw size(w/h): " << burst.GetWidth() << ", " << burst.GetHeight() << std::endl;
+    std::cerr << "raw size(w/h): " << burst.GetWidth() << ", "
+              << burst.GetHeight() << std::endl;
 
     const auto merged = align_and_merge(burst.ToBuffer());
-    std::cerr << "merged size(w/h): " << merged.width() << ", " << merged.height()
-              << std::endl;
+    std::cerr << "merged size(w/h): " << merged.width() << ", "
+              << merged.height() << std::endl;
 
     dump(burst, merged, dir_path);
 
