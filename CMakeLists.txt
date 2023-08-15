@@ -71,6 +71,20 @@ add_halide_library(hdrplus_pipeline
     # extra-output stmt;html;schedule # uncomment for extra output
 )
 
+add_executable(finish_generator src/finish_generator.cpp src/finish.cpp src/util.cpp)
+target_link_libraries(finish_generator PRIVATE Halide::Generator)
+
+add_halide_library(finish_image
+    # GENERATOR_DEPS  # We don't have any yet
+    FROM finish_generator
+    # GENERATOR_ARGS  # We don't have any yet
+    FUNCTION_NAME finish_image
+    # HALIDE_TARGET ${HALIDE_TARGET}  # TODO: add option with custom HALIDE_TARGET
+    # HALIDE_TARGET_FEATURES ${HALIDE_TARGET_FEATURES}  # TODO: add option with custom HALIDE_TARGET
+    # extra-output stmt;html;schedule # uncomment for extra output
+)
+
+
 
 add_executable(hdrplus bin/HDRPlus.cpp ${src_files})
 add_dependencies(hdrplus hdrplus_pipeline)
@@ -79,3 +93,8 @@ target_link_libraries(hdrplus hdrplus_pipeline Halide png jsoncpp ${LIBRAW_LIBRA
 add_executable(stack_frames bin/stack_frames.cpp ${src_files})
 add_dependencies(stack_frames align_and_merge)
 target_link_libraries(stack_frames Halide align_and_merge jsoncpp ${LIBRAW_LIBRARY} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${TIFF_LIBRARIES} ${TIFFXX_LIBRARY})
+
+
+add_executable(finish_raw_frame bin/finish_frame.cpp ${src_files})
+add_dependencies(finish_raw_frame finish_image)
+target_link_libraries(finish_raw_frame Halide finish_image jsoncpp ${LIBRAW_LIBRARY} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${TIFF_LIBRARIES} ${TIFFXX_LIBRARY})
