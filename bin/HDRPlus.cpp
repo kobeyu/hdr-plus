@@ -30,6 +30,7 @@ class HDRPlus {
         const int height = burst.GetHeight();
 
         Halide::Runtime::Buffer<uint8_t> output_img(3, width, height);
+        Halide::Runtime::Buffer<uint16_t> output_merged(width, height);
 
         std::cerr << "Black point: " << burst.GetBlackLevel() << std::endl;
         std::cerr << "White point: " << burst.GetWhiteLevel() << std::endl;
@@ -47,29 +48,37 @@ class HDRPlus {
 
         const int cfa_pattern = static_cast<int>(burst.GetCfaPattern());
         auto ccm = burst.GetColorCorrectionMatrix();
-        hdrplus_pipeline(imgs, burst.GetBlackLevel(), burst.GetWhiteLevel(),
-                         wb.r, wb.g0, wb.g1, wb.b, cfa_pattern, ccm, c, g,
-                         output_img);
-
-        auto fnDump = [&]() {
-            int size =
-                output_img.width() * output_img.height() * sizeof(uint16_t);
-
-            std::ofstream outfile(dir_path + "/finish.bin", std::ios::binary);
-            outfile.write(reinterpret_cast<char*>(output_img.data()), size);
-            outfile.close();
-
+        auto fnDumpBinary = [&]() {
+            // Dump raw images
             std::ofstream raw_imgs(dir_path + "/raw_imgs.bin",
                                    std::ios::binary);
             raw_imgs.write(reinterpret_cast<char*>(imgs.data()),
                            imgs.size_in_bytes());
             raw_imgs.close();
+
+            // Dump merged image
+            std::ofstream outfile_merged(dir_path + "/merged.bin",
+                                         std::ios::binary);
+            outfile_merged.write(reinterpret_cast<char*>(output_merged.data()),
+                                 output_merged.size_in_bytes());
+            outfile_merged.close();
+
+            // Dump output image
+            std::ofstream outfile(dir_path + "/finish.bin", std::ios::binary);
+            outfile.write(reinterpret_cast<char*>(output_img.data()),
+                          output_img.size_in_bytes());
+            outfile.close();
         };
 
-        fnDump();
+        hdrplus_pipeline(imgs, burst.GetBlackLevel(), burst.GetWhiteLevel(),
+                         wb.r, wb.g0, wb.g1, wb.b, cfa_pattern, ccm, c, g,
+                         output_merged, output_img);
+
         // transpose to account for interleaved layout
         output_img.transpose(0, 1);
         output_img.transpose(1, 2);
+
+        fnDumpBinary();
 
         return output_img;
     }
