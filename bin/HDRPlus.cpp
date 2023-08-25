@@ -39,11 +39,11 @@ class HDRPlus {
                   << wb.b << std::endl;
 
         Halide::Runtime::Buffer<uint16_t> imgs = burst.ToBuffer();
-        if (imgs.dimensions() != 3 || imgs.extent(2) < 2) {
-            throw std::invalid_argument(
-                "The input of HDRPlus must be a 3-dimensional buffer with at "
-                "least two channels.");
-        }
+        // if (imgs.dimensions() != 3 || imgs.extent(2) < 2) {
+        //     throw std::invalid_argument(
+        //         "The input of HDRPlus must be a 3-dimensional buffer with at
+        //         " "least two channels.");
+        // }
 
         const int cfa_pattern = static_cast<int>(burst.GetCfaPattern());
         auto ccm = burst.GetColorCorrectionMatrix();
@@ -91,7 +91,7 @@ class HDRPlus {
 };
 
 int main(int argc, char* argv[]) {
-    if (argc < 5) {
+    if (argc < 4) {
         std::cerr << "Usage: " << argv[0]
                   << " [-c comp -g gain (optional)] dir_path out_img raw_img1 "
                      "raw_img2 [...]"
@@ -119,11 +119,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (argc - i < 4) {
+    if (argc - i < 3) {
         std::cerr << "Usage: " << argv[0]
                   << " [-c comp -g gain (optional)] dir_path out_img raw_img1 "
-                     "raw_img2 [...]"
-                  << std::endl;
+                     "raw_img2 [...] "
+                  << std::to_string(argc - i) << std::endl;
         return 1;
     }
 

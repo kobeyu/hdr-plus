@@ -12,7 +12,7 @@ using namespace Halide::ConciseCasts;
 /*
  * box_down2 -- averages 2x2 regions of an image to downsample linearly.
  */
-Func box_down2(Func input, std::string name) {
+Func box_down2(Func input, std::string name, bool auto_schedule) {
     Func output(name);
 
     Var x, y, n;
@@ -26,8 +26,8 @@ Func box_down2(Func input, std::string name) {
     // schedule
     ///////////////////////////////////////////////////////////////////////////
 
-    if(true) {
-        output.set_estimates({{0,4048},{0,3036},{0,6}});
+    if (false) {
+        // output.set_estimates({{0, 4048}, {0, 3036}, {0, 6}});
     } else {
         output.compute_root().parallel(y).vectorize(x, 16);
     }
@@ -86,7 +86,7 @@ Func gauss_down4(Func input, std::string name) {
     ///////////////////////////////////////////////////////////////////////////
 
     if (false) {
-        output.set_estimates({{0,4048},{0,3036},{0,6}});
+        // output.set_estimates({{0, 4048}, {0, 3036}, {0, 6}});
     } else {
         output.compute_root().parallel(y).vectorize(x, 16);
     }

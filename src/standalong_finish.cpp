@@ -767,7 +767,12 @@ Halide::Func finish(Halide::Func input, Expr width, Expr height, Expr bp,
     int black_level = 2000;
     float sharpen_strength = 2.f;
 
-    Func bayer_shifted = shift_bayer_to_rggb(input, cfa_pattern);
+    Region region;
+    region.push_back(Range(0, width));
+    region.push_back(Range(0, height));
+    Func input_mirror = BoundaryConditions::mirror_interior(input, region);
+
+    Func bayer_shifted = shift_bayer_to_rggb(input_mirror, cfa_pattern);
 
     // 1. Black-level subtraction and white-level scaling
     Func black_white_level_output = black_white_level(bayer_shifted, bp, wp);

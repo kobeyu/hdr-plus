@@ -22,6 +22,7 @@ void dump_params(Burst& burst, const std::string& dir_path,
                  const Halide::Runtime::Buffer<uint16_t>& merged_buf) {
     // dump parameters to json file
     Json::Value root;
+    root["folder"] = dir_path;
     root["raw_image_width"] = burst.ToBuffer().width();
     root["raw_image_height"] = burst.ToBuffer().height();
     root["raw_image_channels"] = burst.ToBuffer().channels();
@@ -101,7 +102,8 @@ int main(int argc, char* argv[]) {
     std::cerr << "raw size(w/h): " << burst.GetWidth() << ", "
               << burst.GetHeight() << std::endl;
 
-    const auto merged = align_and_merge(burst.ToBuffer());
+    Halide::Runtime::Buffer<uint16_t> imgs = burst.ToBuffer();
+    const auto merged = align_and_merge(imgs);
     std::cerr << "merged size(w/h): " << merged.width() << ", "
               << merged.height() << std::endl;
 
@@ -110,6 +112,7 @@ int main(int argc, char* argv[]) {
     // const RawImage& raw = burst.GetRaw(0);
     // const std::string merged_filename = dir_path + "/" + out_name;
     // raw.WriteDng(merged_filename, merged);
+    //  raw.WriteDng(merged_filename);
 
     return EXIT_SUCCESS;
 }

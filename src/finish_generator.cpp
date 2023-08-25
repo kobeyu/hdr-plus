@@ -1,6 +1,6 @@
 #include <Halide.h>
 
-#include "finish.h"
+#include "standalong_finish.h"
 
 namespace {
 

@@ -49,7 +49,7 @@ add_halide_library(align_and_merge
     FROM align_and_merge_generator
     FUNCTION_NAME align_and_merge
     SCHEDULE | STMT | STMT_HTML | COMPILER_LOG | LLVM_ASSEMBLY
-    AUTOSCHEDULER Halide::Adams2019 #Halide::Adams2019 #mullapudi2016
+    # AUTOSCHEDULER Halide::Adams2019 #Halide::Adams2019 #mullapudi2016
     TARGETS host
     FEATURES avx avx2 f16c fma sse41
     # HALIDE_TARGET ${HALIDE_TARGET}  # TODO: add option with custom HALIDE_TARGET
@@ -71,7 +71,7 @@ add_halide_library(hdrplus_pipeline
     # extra-output stmt;html;schedule # uncomment for extra output
 )
 
-add_executable(finish_generator src/finish_generator.cpp src/finish.cpp src/util.cpp)
+add_executable(finish_generator src/finish_generator.cpp src/standalong_finish.cpp src/util.cpp)
 target_link_libraries(finish_generator PRIVATE Halide::Generator)
 
 add_halide_library(finish_image
